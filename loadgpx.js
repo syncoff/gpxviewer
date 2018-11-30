@@ -221,51 +221,7 @@ GPXParser.prototype.addRouteToMap = function(route, colour, width) {
 }
 
 GPXParser.prototype.centerAndZoom = function(trackSegment) {
-
-    var pointlist = new Array("trkpt", "rtept", "wpt");
-    var minlat = 0;
-    var maxlat = 0;
-    var minlon = 0;
-    var maxlon = 0;
-
-    for(var pointtype = 0; pointtype < pointlist.length; pointtype++) {
-
-        // Center the map and zoom on the given segment.
-        var trackpoints = trackSegment.getElementsByTagName(
-                pointlist[pointtype]);
-
-        // If the min and max are uninitialized then initialize them.
-        if((trackpoints.length > 0) && (minlat == maxlat) && (minlat == 0)) {
-            minlat = parseFloat(trackpoints[0].getAttribute("lat"));
-            maxlat = parseFloat(trackpoints[0].getAttribute("lat"));
-            minlon = parseFloat(trackpoints[0].getAttribute("lon"));
-            maxlon = parseFloat(trackpoints[0].getAttribute("lon"));
-        }
-
-        for(var i = 0; i < trackpoints.length; i++) {
-            var lon = parseFloat(trackpoints[i].getAttribute("lon"));
-            var lat = parseFloat(trackpoints[i].getAttribute("lat"));
-
-            if(lon < minlon) minlon = lon;
-            if(lon > maxlon) maxlon = lon;
-            if(lat < minlat) minlat = lat;
-            if(lat > maxlat) maxlat = lat;
-        }
-    }
-
-    if((minlat == maxlat) && (minlat == 0)) {
-        this.map.setCenter(new google.maps.LatLng(49.327667, -122.942333), 14);
-        return;
-    }
-
-    // Center around the middle of the points
-    var centerlon = (maxlon + minlon) / 2;
-    var centerlat = (maxlat + minlat) / 2;
-
-    var bounds = new google.maps.LatLngBounds(
-            new google.maps.LatLng(minlat, minlon),
-            new google.maps.LatLng(maxlat, maxlon));
-    this.map.setCenter(new google.maps.LatLng(centerlat, centerlon));
+    var bounds = this.getLatLngBounds(trackSegment);
     this.map.fitBounds(bounds);
 }
 
@@ -305,4 +261,40 @@ GPXParser.prototype.addRoutepointsToMap = function() {
     for(var i = 0; i < routes.length; i++) {
         this.addRouteToMap(routes[i], this.trackcolour, this.trackwidth);
     }
+}
+
+GPXParser.prototype.getLatLngBounds = function(trackSegment) {
+  var pointlist = new Array("trkpt", "rtept", "wpt");
+  var minlat = 0;
+  var maxlat = 0;
+  var minlon = 0;
+  var maxlon = 0;
+
+  for(var pointtype = 0; pointtype < pointlist.length; pointtype++) {
+    var trackpoints = trackSegment.getElementsByTagName(
+      pointlist[pointtype]);
+
+    if((trackpoints.length > 0) && (minlat == maxlat) && (minlat == 0)) {
+      minlat = parseFloat(trackpoints[0].getAttribute("lat"));
+      maxlat = parseFloat(trackpoints[0].getAttribute("lat"));
+      minlon = parseFloat(trackpoints[0].getAttribute("lon"));
+      maxlon = parseFloat(trackpoints[0].getAttribute("lon"));
+    }
+
+    for(var i = 0; i < trackpoints.length; i++) {
+      var lon = parseFloat(trackpoints[i].getAttribute("lon"));
+      var lat = parseFloat(trackpoints[i].getAttribute("lat"));
+
+      if(lon < minlon) minlon = lon;
+      if(lon > maxlon) maxlon = lon;
+      if(lat < minlat) minlat = lat;
+      if(lat > maxlat) maxlat = lat;
+    }
+  }
+
+  var bounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(minlat, minlon),
+    new google.maps.LatLng(maxlat, maxlon));
+
+  return bounds;
 }
